@@ -1,0 +1,53 @@
+services:
+  nginx:
+    build: requirements/nginx/
+    depends_on:
+     - php-fpm
+    ports:
+      - '443:443'
+    volumes:
+      - wordpress:/var/www/html
+      - ./requirements/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - docker-network
+    restart: always
+  mysql:
+    build: requirements/mariadb/
+    networks:
+      - docker-network
+    volumes:
+      - mysql:/var/lib/mysql
+    env_file:
+      - .env
+    restart: always
+  php-fpm:
+    depends_on:
+     - mysql
+    build: requirements/wordpress/
+    volumes:
+      - wordpress:/var/www/html
+      - ./requirements/wordpress/fpm_conf:/etc/php/7.3/fpm
+    env_file:
+      - .env
+    networks:
+      - docker-network
+    restart: always
+
+networks:
+  docker-network:
+
+volumes:
+  wordpress:
+    driver: local
+    driver_opts:
+      type: volume
+      o: bind
+      device: /home/dghonyan/data/wordpress
+  mysql:
+    driver: local
+    driver_opts:
+      type: volume
+      o: bind
+      device: /home/dghonyan/data/mysql
+
+#docker exec -it `docker ps | grep php | awk '{print $1}'` bash
